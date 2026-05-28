@@ -1,0 +1,6 @@
+{
+  "name": "Overhaultrain AI Workspace",
+  "description": "Your AI Voice Coach and Location Concierge, helping you find optimal workout spots and trails with real-time GPS grounding.",
+  "requestFramePermissions": ["geolocation", "microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

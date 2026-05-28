@@ -1,0 +1,48 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@300;400;500;600&family=Playfair+Display:wght@400;500;600;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --color-surface: #141310;
+  --color-surface-low: #0f0e0c;
+  --color-surface-mid: #1a1916;
+  --color-surface-high: #252320;
+  --color-noir: #0a0a0a;
+  --color-gold: #D4AF37;
+  --color-gold-dim: #b88a2a;
+  --color-cream: #e6e2dc;
+  --color-cream-dim: #b8b4af;
+  --color-outline: #2a2824;
+
+  --font-sans: "Inter", system-ui, sans-serif;
+  --font-serif: "Playfair Display", serif;
+  --font-display: "Outfit", sans-serif;
+}
+
+@layer base {
+  body {
+    @apply bg-surface text-cream antialiased;
+    font-family: var(--font-sans);
+  }
+}
+
+@layer components {
+  .serif-title {
+    @apply font-serif tracking-tight text-cream;
+  }
+  
+  .label-caps {
+    @apply font-display text-[10px] uppercase tracking-[0.25em] font-medium text-cream;
+  }
+
+  .card-border {
+    @apply bg-surface border border-outline;
+  }
+
+  .cta-btn {
+    @apply bg-gold text-noir font-display text-[10px] uppercase tracking-[0.25em] font-bold px-8 py-3 hover:brightness-110 active:scale-95;
+  }
+
+  .btn-ghost {
+    @apply border border-outline text-cream font-display text-[10px] uppercase tracking-[0.25em] font-medium px-6 py-2.5 hover:bg-gold hover:text-noir hover:border-gold;
+  }
+}
