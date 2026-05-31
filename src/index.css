@@ -38,6 +38,14 @@
     @apply bg-surface border border-outline;
   }
 
+  .upper-workout-card {
+    min-height: 140px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    transition: all 0.3s ease-in-out;
+  }
+
   .cta-btn {
     @apply bg-gold text-noir font-display text-[10px] uppercase tracking-[0.25em] font-bold px-8 py-3 hover:brightness-110 active:scale-95;
   }

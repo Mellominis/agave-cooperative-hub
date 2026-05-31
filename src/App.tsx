@@ -1,11 +1,16 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import "./index.css";
 import { APIProvider, useMap, useMapsLibrary } from "@vis.gl/react-google-maps";
-import { Compass, HelpCircle, User, Sparkles, MapPin, Layers, Info } from "lucide-react";
+import { Compass, HelpCircle, User, Sparkles, MapPin, Layers, Info, Utensils } from "lucide-react";
 import Sidebar from "./components/Sidebar";
 import MapContainer from "./components/MapContainer";
 import PlaceDetailCard from "./components/PlaceDetailCard";
+import TastingJournalDashboard from "./components/TastingJournalDashboard";
 import { Message, PlacePin, GroundingChunk, ChatHistoryItem } from "./types";
+import AuthGate from "./components/AuthGate";
+import { onAuthStateChanged, signOut } from "firebase/auth";
+import { auth } from "./firebase";
+import { LocalizationProvider, useLocalization } from "./LocalizationContext";
 
 // Exposing API standard keys following Constitution Rules
 const API_KEY =
@@ -131,7 +136,13 @@ function MapContent({
 }
 
 // Master GeoConcierge App component containing state context and Google Maps logic
-function GeoConciergeApp() {
+interface GeoConciergeAppProps {
+  user?: any;
+  onSignOut?: () => void;
+}
+
+function GeoConciergeApp({ user, onSignOut }: GeoConciergeAppProps = {}) {
+  const { t, language } = useLocalization();
   const [map, setMapInstance] = useState<google.maps.Map | null>(null);
   const placesLib = useMapsLibrary("places");
   
@@ -152,6 +163,10 @@ function GeoConciergeApp() {
     activeSubMode: null,
     placeType: null
   });
+
+  // Dual-mode layout state to toggle between Google Maps and Tasting Journal Dashboard
+  const [rightPaneView, setRightPaneView] = useState<"map" | "tasting">("map");
+  const [activeTab, setActiveTab] = useState<"chat" | "dashboard" | "workoutHub" | "nutrition" | "journal">("chat");
 
   // Initialize coordinates context with user's geolocation if granted
   useEffect(() => {
@@ -582,6 +597,7 @@ function GeoConciergeApp() {
           lng: center.lng,
           history: historyContext,
           userGoal,
+          language,
         }),
       });
 
@@ -722,6 +738,7 @@ function GeoConciergeApp() {
       {/* Sidebar Layout */}
       <Sidebar
         messages={messages}
+        setMessages={setMessages}
         onSendMessage={handleSendMessage}
         loading={loading}
         currentCoordinates={center}
@@ -738,46 +755,101 @@ function GeoConciergeApp() {
         selectedPin={selectedPin}
         onPinSelect={handlePinSelect}
         onAddressSearch={handleAddressSearch}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
       />
 
       {/* Main Interactive Map Layout container */}
-      <div className="flex-1 h-1/2 md:h-full relative border-t md:border-t-0 p-0 m-0 overflow-hidden">
-        {pins.length === 0 && (
-          <div className="absolute top-18 right-4 bg-slate-900/90 text-white text-xs font-medium px-4 py-2.5 rounded-xl border border-slate-800 z-10 shadow-2xl backdrop-blur flex items-center gap-2 max-w-sm animate-in fade-in slide-in-from-top duration-300">
-            <Info className="w-4 h-4 text-cyan-400 flex-shrink-0" />
-            <p>Click on coordinates or search destinations to establish a focal context for the chatbot.</p>
+      <div className={`flex-1 ${activeTab === "chat" ? "hidden md:flex" : "h-[50dvh] md:h-full"} relative border-t md:border-t-0 p-0 m-0 overflow-hidden flex flex-col`}>
+        {rightPaneView === "tasting" ? (
+          <TastingJournalDashboard onToggleMap={() => setRightPaneView("map")} />
+        ) : (
+          <div className="w-full h-full flex flex-col bg-[#0b0f19]">
+            {/* Compact Structured Header */}
+            <div className="w-full p-2 bg-[#0e1424]/45 border-b border-slate-900 flex items-center justify-between gap-2 shrink-0 select-none">
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs">🍴</span>
+                <h2 className="text-[10px] sm:text-xs font-bold tracking-wider text-slate-300 uppercase">
+                  {t("dashboard.header")}
+                </h2>
+              </div>
+              
+              <button
+                onClick={() => setRightPaneView("tasting")}
+                className="bg-purple-900/30 text-purple-200 border border-purple-500/25 px-2.5 py-1 rounded-lg text-[10px] font-bold tracking-wide hover:bg-purple-600 hover:text-white transition duration-200 cursor-pointer active:scale-95 flex items-center gap-1 shrink-0"
+                title="Switch to Tasting and Wellness Journal"
+              >
+                <Utensils className="w-3" />
+                <span>Open Dashboard</span>
+              </button>
+            </div>
+
+            {/* Map Canvas Wrapper */}
+            <div className="relative flex-1 w-full min-h-[350px]">
+              {pins.length === 0 && (
+                <div className="absolute top-18 right-4 bg-slate-900/90 text-white text-xs font-medium px-4 py-2.5 rounded-xl border border-slate-800 z-10 shadow-2xl backdrop-blur flex items-center gap-2 max-w-sm animate-in fade-in slide-in-from-top duration-300">
+                  <Info className="w-4 h-4 text-cyan-400 flex-shrink-0" />
+                  <p>Click on coordinates or search destinations to establish a focal context for the chatbot.</p>
+                </div>
+              )}
+
+              <MapContent
+                center={center}
+                zoom={zoom}
+                pins={pins}
+                selectedPin={selectedPin}
+                onMapClick={handleMapClick}
+                onPinSelect={handlePinSelect}
+                onAutocompleteSelect={handleAutocompleteSelect}
+                onPinAdded={handleAddNewPin}
+                onSendMessage={handleSendMessage}
+                userGoal={userGoal}
+                messages={messages}
+                setMessages={setMessages}
+                setPins={setPins}
+                setCenter={setCenter}
+                setZoom={setZoom}
+                setPlaceName={setPlaceName}
+                setSelectedPin={setSelectedPin}
+                setLoading={setLoading}
+                loading={loading}
+                onMapLoad={setMapInstance}
+              />
+            </div>
           </div>
         )}
-
-        <MapContent
-          center={center}
-          zoom={zoom}
-          pins={pins}
-          selectedPin={selectedPin}
-          onMapClick={handleMapClick}
-          onPinSelect={handlePinSelect}
-          onAutocompleteSelect={handleAutocompleteSelect}
-          onPinAdded={handleAddNewPin}
-          onSendMessage={handleSendMessage}
-          userGoal={userGoal}
-          messages={messages}
-          setMessages={setMessages}
-          setPins={setPins}
-          setCenter={setCenter}
-          setZoom={setZoom}
-          setPlaceName={setPlaceName}
-          setSelectedPin={setSelectedPin}
-          setLoading={setLoading}
-          loading={loading}
-          onMapLoad={setMapInstance}
-        />
       </div>
     </div>
   );
 }
 
-// Global wrap configuration enforcing API key check first
+// Global wrap configuration enforcing API key check first and user authentication Gate
 export default function App() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [user, setUser] = useState<any>(null);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      if (currentUser) {
+        setUser(currentUser);
+        setIsAuthenticated(true);
+      } else {
+        setUser(null);
+        setIsAuthenticated(false);
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  const handleAuthSuccess = () => {
+    setIsAuthenticated(true);
+  };
+
+  const handleSignOut = async () => {
+    await signOut(auth);
+  };
+
   if (!hasValidKey) {
     return (
       <MapContainer
@@ -793,9 +865,15 @@ export default function App() {
     );
   }
 
+  if (!isAuthenticated) {
+    return <AuthGate onAuthSuccess={handleAuthSuccess} />;
+  }
+
   return (
-    <APIProvider apiKey={API_KEY} version="weekly">
-      <GeoConciergeApp />
-    </APIProvider>
+    <LocalizationProvider>
+      <APIProvider apiKey={API_KEY} version="weekly">
+        <GeoConciergeApp user={user} onSignOut={handleSignOut} />
+      </APIProvider>
+    </LocalizationProvider>
   );
 }

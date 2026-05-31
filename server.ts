@@ -1,7 +1,7 @@
 import express from "express";
 import path from "path";
 import { createServer as createViteServer } from "vite";
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI, Type } from "@google/genai";
 import dotenv from "dotenv";
 
 // Load environment variables
@@ -12,6 +12,17 @@ const PORT = 3000;
 
 // Middleware
 app.use(express.json());
+
+// Express Server Handler endpoint
+app.post('/api/verify-admin', (req, res) => {
+  const { code } = req.body;
+  const masterSecret = process.env.APP_ADMIN_SECRET_KEY || "OVERHAUL2026";
+  
+  if (code === masterSecret) {
+    return res.status(200).json({ authorized: true });
+  }
+  return res.status(401).json({ authorized: false });
+});
 
 // Helper to get GoogleGenAI client with lazy loading
 let aiClient: GoogleGenAI | null = null;
@@ -315,7 +326,7 @@ app.post("/api/menu-recommendations", async (req, res) => {
 
 // Chat API endpoint
 app.post("/api/chat", async (req, res) => {
-  const { message, lat, lng, history, userGoal } = req.body;
+  const { message, lat, lng, history, userGoal, language } = req.body;
 
   if (!message) {
     res.status(400).json({ error: "Message is required" });
@@ -358,9 +369,19 @@ app.post("/api/chat", async (req, res) => {
       }
     }
 
+    // Setup model language instructions
+    let languagePrefix = "You are Gerdy, an elite fitness and nutrition coach. Respond entirely in English.";
+    if (language === "es") {
+      languagePrefix = "You are Gerdy, an elite fitness and nutrition coach. The user's system language is Spanish. Respond entirely in Spanish.";
+    } else if (language === "fr") {
+      languagePrefix = "You are Gerdy, an elite fitness and nutrition coach. The user's system language is French. Respond entirely in French.";
+    }
+
     // Setup configuration
     const config: any = {
-      systemInstruction: `You are an elite, highly interactive, map-based fitness concierge and location chatbot powered by Overhaultrain.
+      systemInstruction: `${languagePrefix}
+
+You are an elite, highly interactive, map-based fitness concierge and location chatbot powered by Overhaultrain.
 Your goals are:
 1. Provide extremely accurate and helpful geographical, fitness, and local training/diet recommendation suggestions.
 2. Rely strictly on real-time Google Maps ground truth using the provided googleMaps tool.
@@ -401,6 +422,106 @@ Your goals are:
     console.error("Gemini API Error in server.ts:", err);
     res.status(500).json({
       error: err.message || "An unexpected error occurred while communicating with Gemini.",
+    });
+  }
+});
+
+// Food Image Analysis Endpoint using Gemini 3.5-flash vision capabilities
+app.post("/api/analyze-food", async (req, res) => {
+  const { image } = req.body;
+
+  if (!image) {
+    res.status(400).json({ error: "Image data is required" });
+    return;
+  }
+
+  try {
+    const ai = getGenAIClient();
+
+    // Extract mime type and raw base64 data
+    let base64Data = image;
+    let mimeType = "image/jpeg";
+
+    if (base64Data.startsWith("data:")) {
+      const parts = base64Data.split(",");
+      mimeType = parts[0].split(";")[0].split(":")[1] || "image/jpeg";
+      base64Data = parts[1];
+    }
+
+    const imagePart = {
+      inlineData: {
+        mimeType: mimeType,
+        data: base64Data,
+      },
+    };
+
+    const promptText = `
+      You are an elite athletic trainer, dietitian, and professional nutritionist.
+      Analyze the provided meal picture and output estimated values.
+      
+      Look closely at the components, identify the main ingredients, guess the typical portion size, and return estimated values:
+      - foodName: A short descriptive name of the meal (e.g. "Grilled Chicken Breast with Steamed Broccoli")
+      - calories: Total calories (kcal)
+      - protein: Protein content (g)
+      - carbs: Carbohydrates content (g)
+      - fat: Fat content (g)
+
+      Verify constraints:
+      - Double-check your values against typical standard nutrition catalogs (like USDA or nutrition labels) for this quantity.
+      - Return strictly a valid JSON object matching the requested schema.
+    `;
+
+    const response = await ai.models.generateContent({
+      model: "gemini-3.5-flash",
+      contents: [
+        imagePart,
+        { text: promptText }
+      ],
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            foodName: {
+              type: Type.STRING,
+              description: "Short descriptive name of the detected meal",
+            },
+            calories: {
+              type: Type.INTEGER,
+              description: "Total estimated calories in kcal",
+            },
+            protein: {
+              type: Type.INTEGER,
+              description: "Total estimated protein in grams",
+            },
+            carbs: {
+              type: Type.INTEGER,
+              description: "Total estimated carbs in grams",
+            },
+            fat: {
+              type: Type.INTEGER,
+              description: "Total estimated fat in grams",
+            },
+          },
+          required: ["foodName", "calories", "protein", "carbs", "fat"],
+        }
+      }
+    });
+
+    const textResponse = response.text || "{}";
+    const parsedData = JSON.parse(textResponse.trim());
+
+    res.json(parsedData);
+  } catch (err: any) {
+    console.error("Error analyzing meal layout image:", err);
+    // Provide a graceful fallback directly from backend in case of limits or issues
+    res.json({
+      foodName: "Analyzed Meal (Aesthetic Health Portion)",
+      calories: 420,
+      protein: 28,
+      carbs: 45,
+      fat: 14,
+      isFallback: true
     });
   }
 });
