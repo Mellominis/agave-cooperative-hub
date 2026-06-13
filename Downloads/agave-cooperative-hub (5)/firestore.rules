@@ -1,0 +1,39 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global Safety Net Default Deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Primitive global helpers
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    // Hardened entity validation
+    function isValidSignup(data) {
+      return data.keys().hasAll(['fullName', 'email', 'role', 'enterpriseName', 'source', 'createdAt'])
+        && data.keys().size() == 6
+        && data.fullName is string && data.fullName.size() > 0 && data.fullName.size() <= 200
+        && data.email is string && data.email.size() > 0 && data.email.size() <= 200
+        && data.role is string && (data.role == 'grower' || data.role == 'processor' || data.role == 'agronomy_advocate' || data.role == 'trade_buying_agent')
+        && data.enterpriseName is string && data.enterpriseName.size() <= 200
+        && data.source is string && data.source.size() <= 200
+        && data.createdAt is string && data.createdAt.size() <= 50;
+    }
+
+    // Signups Collection Safety
+    match /signups/{signupId} {
+      // Anyone can submit a registration, but it must match the strict schema
+      allow create: if isValidId(signupId) && isValidSignup(incoming());
+      
+      // Strict PII isolation prevents query scraping and reading by malicious third-parties
+      allow read, update, delete: if false;
+    }
+  }
+}

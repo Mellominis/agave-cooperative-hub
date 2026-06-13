@@ -1,0 +1,288 @@
+{
+  "manual": {
+    "title": "Agave in Zimbabwe",
+    "subtitle": "A Training Manual for Growing, Processing, and Building a New Industry",
+    "version": "1.2",
+    "brand": "Mellow Minis",
+    "country": "Zimbabwe",
+    "language": "en",
+    "chapters": [
+      {
+        "number": 1,
+        "title": "What is Agave?",
+        "summary": "Defines agave as a desert-adapted succulent and explains why it matters for Zimbabwe.",
+        "content": "Agave is a succulent plant that stores water and energy in its leaves and piña. It is not a cactus and not a tree. It is a desert-adapted plant that can support food, fiber, personal care, agricultural inputs, and spirits. Agave uses CAM photosynthesis, which helps it conserve water in hot, dry environments. That makes it relevant for semi-arid regions of Zimbabwe. The crop should be treated as a long-horizon agricultural and industrial opportunity, not a fast-return commodity."
+      },
+      {
+        "number": 2,
+        "title": "Why Zimbabwe Has a Real Opportunity",
+        "summary": "Explains the strategic opportunity for agave in Zimbabwe and why pilot trials are essential.",
+        "content": "Zimbabwe has no large commercial agave industry yet, which means the opportunity is still open. The right way to approach that opportunity is through pilot trials, not assumptions. Matabeleland South is one of the strongest candidate regions because of its semi-arid conditions. The opportunity is not only agricultural. It is industrial, commercial, and social. Agave can support jobs, create products, and help build a new regional value chain."
+      },
+      {
+        "number": 3,
+        "title": "What Agave Can Produce",
+        "summary": "Introduces product categories such as food, fiber, personal care, agricultural inputs, and spirits.",
+        "content": "Agave can be turned into food products, fiber products, personal care goods, agricultural inputs, and spirits. Each category has different regulatory requirements. A single crop can therefore support multiple businesses if the processing and compliance systems are built correctly. Food products must follow Zimbabwe food labelling rules. Plant material must follow import and quarantine rules. Spirits require a separate compliance path and should not be treated as the same category as food or fiber."
+      },
+      {
+        "number": 4,
+        "title": "Plant Anatomy and Growth Cycle",
+        "summary": "Explains agave anatomy, the piña, and why the crop grows slowly.",
+        "content": "Agave has spiny leaves, a central piña, fibrous roots, and eventually a flowering stalk called a quiote. The piña is the main storage organ and is the part usually used for syrup or spirit production. The leaves are often used for fiber. The crop grows slowly because it stores energy over time. That slow growth is a business challenge, but it is also what creates the product value later on. The manual should teach that patience is a production input."
+      },
+      {
+        "number": 5,
+        "title": "Which Varieties Suit Zimbabwe's Conditions?",
+        "summary": "Compares agave varieties and gives Oaxaca harvest benchmarks for pilot planning.",
+        "content": "Some agave varieties may suit Zimbabwe better than others. Blue Weber may work in semi-arid areas, Espadín may be easier to cultivate, Agave americana is already naturalized, and Agave salmiana offers biomass but takes longer. All of these still require pilot testing. In Oaxaca, Mexico, Espadín commonly reaches commercial maturity in about 5–8 years, while Blue Weber often reaches maturity in about 6–8 years or longer for better sugar accumulation. That gives Zimbabwe a practical benchmark for pilot planning. Before scaling, import a small number of offsets of each variety, plant them in different locations, and track survival, growth, and sugar accumulation."
+      },
+      {
+        "number": 6,
+        "title": "Inulin Accumulation",
+        "summary": "Explains the sugar stored in the piña and why plant size is not the same as maturity.",
+        "content": "Inulin is the complex sugar stored in the piña. It accumulates slowly and determines whether the plant is ready for syrup or spirit production. A plant can look large before it is actually mature enough for harvest. The manual should stress that size is not the same as sugar maturity. The industry must learn to measure readiness by quality indicators, not by appearance alone. This helps prevent premature harvests and poor product yield."
+      },
+      {
+        "number": 7,
+        "title": "Soil Requirements",
+        "summary": "Describes the ideal soil profile for agave and why drainage matters most.",
+        "content": "Agave prefers sandy, rocky, well-draining soil. Heavy clay and waterlogged sites should be avoided. Good drainage is more important than high fertility. A farm team should test soil before planting and pay attention to pH and structure. If water pools after rainfall, the site may not be suitable without major improvement. The right soil reduces long-term losses."
+      },
+      {
+        "number": 8,
+        "title": "Rainfall and Irrigation",
+        "summary": "Explains irrigation needs during nursery and establishment and introduces water realism.",
+        "content": "Agave is drought-tolerant once established, but young plants need irrigation support. Drip irrigation is the most practical method for nurseries and early establishment. Overwatering is a more common problem than under-watering. In Zimbabwe, semi-arid zones are better candidates than very wet or very cold areas. The goal is to support the plant during establishment, then reduce dependence on water. Even drought-tolerant agave needs a reliable water source during nursery and establishment, so before planting the team should confirm borehole, catchment, or irrigation feasibility and estimate litres per plant during the establishment phase."
+      },
+      {
+        "number": 9,
+        "title": "Temperature and Frost Sensitivity",
+        "summary": "Describes temperature limits and explains why elevation and frost matter.",
+        "content": "Most agave varieties do not tolerate freezing temperatures. High-elevation or frost-prone areas are therefore less suitable for commercial planting. Warm, low-to-mid elevation zones are the best starting point. Matabeleland South is promising because it combines warm conditions with lower rainfall. Even there, pilots should test local microclimates. Temperature, wind, and drainage still matter at the farm level."
+      },
+      {
+        "number": 10,
+        "title": "Pest Management",
+        "summary": "Identifies the major pest risks and introduces early response logic.",
+        "content": "The main pest risks include snout weevil, scale insects, fungal rot, and nursery disease. These problems are often introduced through poor planting material or weak sanitation. Prevention is cheaper than treatment. A strong pest plan starts with inspection and isolation. Imported offsets must be checked before planting. Workers should be trained to report early symptoms instead of waiting for the whole block to fail. If snout weevil or decay is detected in imported or nursery stock, isolate the plant immediately and remove it if infestation is advanced."
+      },
+      {
+        "number": 11,
+        "title": "Propagation Methods",
+        "summary": "Compares offsets, seeds, and tissue culture for commercial planting.",
+        "content": "Offsets are the best commercial starting point because they are predictable and fast to establish. Seeds are useful for experimentation but are slower and more variable. Tissue culture can scale faster but needs more capital and technical support. For a pilot operation, offsets give the most reliable field results. The team should focus on healthy, uniform planting material. Weak material creates weak farms."
+      },
+      {
+        "number": 12,
+        "title": "Importing Planting Material",
+        "summary": "Explains the legal and logistics requirements for importing agave offsets.",
+        "content": "Imported plant material must be treated as a regulated item. The team should secure the correct import permission, phytosanitary certification, and customs documentation before shipping anything. If the documents are not in place, the material should not move. Border problems are usually caused by missing paperwork, incorrect plant names, or poor communication between supplier and importer. A documented chain of provenance for supplier, mother-plant location, and variety confirmation should also be retained for future traceability and any sustainability or export claims."
+      },
+      {
+        "number": 13,
+        "title": "Land Preparation",
+        "summary": "Describes how to prepare planting land for drainage, access, and long-term management.",
+        "content": "Agave land should be cleared, tilled, and laid out for drainage and row management. Straight rows and clear access paths make long-term maintenance easier. Land preparation should be done with the full growth cycle in mind. This crop is slow, so the field must be designed for years of use. The team should think about irrigation access, worker movement, and harvest routes from the beginning. Good layout saves labor later."
+      },
+      {
+        "number": 14,
+        "title": "Planting and Nursery Management",
+        "summary": "Focuses on nursery conditions, hardening off, and early survival.",
+        "content": "The nursery should use shade, good substrate, and consistent watering during early establishment. Hardening off should be gradual so young plants can adapt to field conditions. This stage is where survival rates are either built or lost. Nursery management should be treated as a technical operation. The best growers are often the ones who take early-stage discipline seriously. Care in the nursery saves money in the field."
+      },
+      {
+        "number": 15,
+        "title": "Recordkeeping and Survival Rates",
+        "summary": "Explains why records are essential for comparing sites and correcting problems.",
+        "content": "Every planting block should have records for source, species, date, survival rate, and plant condition. Without records, management cannot compare sites or identify problems. Good recordkeeping turns field activity into business intelligence. Survival rates should be checked regularly and compared across locations. If one block performs poorly, the team should investigate why. Data should lead to action."
+      },
+      {
+        "number": 16,
+        "title": "Small-Scale Processing Equipment",
+        "summary": "Guides the pilot-first approach to machinery and processing investment.",
+        "content": "A pilot agave business should begin with equipment that matches its first revenue plan. That may be syrup, fiber, mushrooms, or simple handicrafts. The wrong equipment order can slow the entire business. Do not buy large machinery before proving the market. Start with quality control tools, then move into processing equipment once sales are validated. Pilot first, scale later. For syrup lines and fiber lines, the manual should add a rough capacity threshold before expansion."
+      },
+      {
+        "number": 17,
+        "title": "Syrup Production Process",
+        "summary": "Describes the production flow for agave syrup and the need for repeatability.",
+        "content": "Agave syrup production involves harvesting mature piñas, cooking them, extracting juice, and concentrating the liquid. Heat control is critical because it influences flavor, yield, and quality. Clean bottling and clear labelling complete the process. The team should monitor solids content, pH, and shelf life. If the product is inconsistent, the process should be corrected before more sales are attempted. A good product begins with a repeatable process. The pilot line should only scale once batch quality is stable enough to support repeatable sales and customer trust."
+      },
+      {
+        "number": 18,
+        "title": "Fiber Extraction Process",
+        "summary": "Explains how agave leaves can be turned into fiber products.",
+        "content": "Fiber comes from agave leaves and can be turned into rope, mats, baskets, and other goods. After decortication, the fiber must be cleaned and dried properly. Moisture control matters because damp fiber loses quality. This line can be valuable because it uses plant parts that may otherwise be wasted. Fiber also supports artisan and rural income streams. It is often a useful secondary line while the farm matures."
+      },
+      {
+        "number": 19,
+        "title": "Mushroom Production on Agave Bagasse",
+        "summary": "Shows how bagasse can be repurposed as mushroom substrate or compost.",
+        "content": "Bagasse, the leftover material after piña processing, can be used as mushroom substrate. This creates extra value from a byproduct and reduces waste. It also helps the business diversify while the agave crop is still growing. The process should be clean, controlled, and small enough to manage well. The goal is not just to grow mushrooms, but to make use of material that already exists. Byproduct thinking improves margins. Bagasse should be routed quickly into either mushroom substrate or compost, depending on cleanliness, moisture, and local demand."
+      },
+      {
+        "number": 20,
+        "title": "Quality Control and Hygiene",
+        "summary": "Explains the importance of sanitation, separation, and product safety.",
+        "content": "A processing operation must keep food, fiber, and cosmetic production separated. Cross-contamination reduces product quality and may create compliance problems. Hygiene is part of the brand and part of the business model. Clean surfaces, clean tools, proper storage, and regular worker hygiene should be standard. If the facility is messy, the brand will eventually reflect that mess. Quality begins with discipline."
+      },
+      {
+        "number": 21,
+        "title": "Input Sourcing",
+        "summary": "Explains how to source offsets, packaging, equipment, and other inputs.",
+        "content": "The early supply chain may depend on imported offsets, packaging, equipment, and certain processing inputs. South Africa is a logical regional source for some of these items. Every source, however, should be checked for quality and legal compliance. A cheap supplier is not necessarily a good supplier. What matters is plant survival, consistency, and reliable delivery. Sourcing must be treated as a strategic function."
+      },
+      {
+        "number": 22,
+        "title": "Transport and Storage",
+        "summary": "Describes how to handle live offsets and store different product categories correctly.",
+        "content": "Live offsets are the most fragile product in the chain. Transport should be fast, properly packed, and protected from heat and damage. Once the shipment arrives, it should be moved quickly to nursery or storage. Syrup, fiber, and bagasse each need different storage conditions. The team should not apply one storage method to all products. Good logistics protects value. For live planting material, transport planning should always assume the route may be delayed, so packing and timing must be conservative."
+      },
+      {
+        "number": 23,
+        "title": "Wholesale, Retail, Export, and Direct-to-Consumer",
+        "summary": "Explains channel strategy and why products may fit different markets.",
+        "content": "A strong agave business should use more than one channel. Local retail can build awareness, direct-to-consumer can protect margin, and export can come later once compliance and volume are strong. Different products may also fit different channels. The manual should explain that channel strategy is part of product strategy. A syrup product, for example, may move through retail, while fiber may move through bulk or artisan sales. The business should match product form to the right market."
+      },
+      {
+        "number": 24,
+        "title": "Export Documentation",
+        "summary": "Introduces the documentation discipline needed for export shipments.",
+        "content": "Exporting requires documentation discipline. Certificates of origin, customs declarations, and phytosanitary documents may all be needed depending on the product type. Missing paperwork can slow or stop the shipment. The manual should tell the team to create export checklists for every shipment. This reduces border risk and helps the operation scale. Documentation is part of production."
+      },
+      {
+        "number": 25,
+        "title": "Farm-Only Model",
+        "summary": "Describes a low-capital model that sells raw agave or planting stock.",
+        "content": "The farm-only model focuses on producing agave and selling raw material or planting stock. It is usually the easiest place to begin because it needs less capital. However, it also offers the lowest margin. This model works best when there is already a buyer or processor in place. Otherwise, the farmer takes on too much risk for too little reward. The manual should present this model as low risk, not high profit."
+      },
+      {
+        "number": 26,
+        "title": "Processing-Only Model",
+        "summary": "Explains the model where processors buy agave and convert it into products.",
+        "content": "A processing-only business buys agave from growers and converts it into products. This model can be profitable if supply is reliable and quality is standardized. It requires more equipment, skill, and management. The biggest challenge is inconsistency in raw material. If the plants arrive at different maturities or quality levels, processing becomes harder. Strong standards are essential."
+      },
+      {
+        "number": 27,
+        "title": "Brand-Led Consumer Model",
+        "summary": "Shows how a brand can control product, packaging, and marketing from field to shelf.",
+        "content": "The brand-led model combines product development, processing, packaging, and marketing. This is the best route for creating margin, but it is also the most demanding. It requires trust, design, consistency, and customer loyalty. This model fits a consumer brand like Mellow Minis. The brand is not just a product label; it is the promise of quality and experience. The manual should show that branding is a production system in itself."
+      },
+      {
+        "number": 28,
+        "title": "Cooperative Ownership Model",
+        "summary": "Explains how cooperatives can share risk and opportunity when governed properly.",
+        "content": "A cooperative allows farmers or operators to share ownership and risk. This can help smaller participants enter the industry. But it only works with clear rules, leadership, and accountability. The manual should explain that cooperation is not the same as informality. The group must still operate with structure. Shared ownership without discipline will fail. Zimbabwe’s Co-Operative Societies Act is the legal framework for formation, registration, regulation, management, functioning, and dissolution of cooperatives, so the model constitution should align with that act."
+      },
+      {
+        "number": 29,
+        "title": "Contract Growing",
+        "summary": "Introduces contract growing as a way to reduce uncertainty between farmers and buyers.",
+        "content": "Contract growing links farmers and processors through agreed terms. The farmer produces to a standard, and the processor agrees to buy under defined conditions. This can help both sides reduce uncertainty. The contract must clearly define quality, timing, volume, and pricing. Without clarity, the relationship becomes unstable. Written terms create trust."
+      },
+      {
+        "number": 30,
+        "title": "Land and Agriculture Compliance",
+        "summary": "Explains the legal importance of land access, leases, zoning, and water rights.",
+        "content": "A business built on land must begin with legal land access. Ownership, lease agreements, and agricultural zoning should be confirmed before any planting begins. Water access and local legal advice are also important. The manual should make it clear that land compliance protects investment. A good project can be weakened by poor legal structure. Compliance is part of the foundation."
+      },
+      {
+        "number": 31,
+        "title": "Plant Import Rules",
+        "summary": "Describes the legal controls around importing planting material into Zimbabwe.",
+        "content": "Imported plant material is regulated and should be treated carefully. The business must secure the right permits and certification before the shipment enters the country. Every border crossing should be planned around compliance. If the team cannot document the shipment properly, the shipment should not be sent. This is especially important for live plant material. Good import control protects field success."
+      },
+      {
+        "number": 32,
+        "title": "Food-Labelling Regulations",
+        "summary": "Explains Zimbabwe food-labelling requirements and why labels matter.",
+        "content": "Food products must comply with Zimbabwe food-labelling requirements. Labels should identify the product clearly, list ingredients, include weight, show the manufacturer, and provide traceability details. The manual should treat labels as legal documents. The brand should also see labels as part of customer trust. A clean label sells better than a confusing one. Good labelling is both compliance and marketing."
+      },
+      {
+        "number": 33,
+        "title": "Alcohol Licensing",
+        "summary": "Explains why agave spirit production is a separate legal category.",
+        "content": "Agave spirit production is a separate legal category. It requires liquor licensing, excise compliance, and market-specific label rules. It should not be mixed with food or fiber compliance. The manual should also make clear that tequila and mezcal are protected names tied to Mexican origin rules. If the product is not genuine Mexican mezcal, it should not be called mezcal. That distinction protects the business and avoids legal problems."
+      },
+      {
+        "number": 34,
+        "title": "Export Documentation and Standards",
+        "summary": "Explains the documents and quality standards needed to export agave products.",
+        "content": "Exporting agave products requires proper paperwork and quality standards. Certificates of origin, phytosanitary documents, and customs filings may all be needed. The type of document depends on the product and destination. The team should prepare a standard export pack for each shipment type. This reduces delays and makes operations repeatable. Export success is built on systems."
+      },
+      {
+        "number": 35,
+        "title": "Farmer Training Program",
+        "summary": "Describes how farmer training should be practical, repeated, and demonstration-based.",
+        "content": "Training should be practical and repetitive. Farmers need to understand planting, irrigation, pest monitoring, harvesting, and basic recordkeeping. Short sessions with demonstration plots are usually more effective than lectures alone. The manual should encourage learning by doing. That approach helps community members remember what matters in the field. Training becomes part of production."
+      },
+      {
+        "number": 36,
+        "title": "Youth and Women’s Participation",
+        "summary": "Explains the importance of including youth and women in the project.",
+        "content": "A new agave industry should create room for youth and women. Nursery work, packaging, sales, handicrafts, and processing all provide opportunities. Broad participation also strengthens local support. This is not only a social goal. It is a practical way to build labor capacity and ownership. A strong rural industry should include the community that sustains it."
+      },
+      {
+        "number": 37,
+        "title": "Cooperative Ownership",
+        "summary": "Explains cooperative governance, rules, and how a constitution supports stability.",
+        "content": "If a cooperative structure is used, the rules must be clear. Members need to understand voting, profit sharing, reinvestment, and exit procedures. The cooperative should not depend on informal promises. A written constitution protects the group when disagreements happen. Good governance is a form of risk management. The manual should make this clear."
+      },
+      {
+        "number": 38,
+        "title": "Local Job Creation",
+        "summary": "Shows how agave can create employment across the whole value chain.",
+        "content": "Agave can create jobs across the whole chain, not only on the farm. Nursery operations, fieldwork, processing, transport, retail, and training all create employment. This helps the crop become a development story, not only a business story. The manual should present jobs as a natural result of industry building. A crop becomes more valuable when it supports livelihoods. That is one of the strongest reasons for local investment."
+      },
+      {
+        "number": 39,
+        "title": "90-Day Immediate Pilot",
+        "summary": "Outlines the first 90 days of setup, permitting, and pilot preparation.",
+        "content": "The first 90 days should focus on land, permits, supplier contact, and nursery setup. This is the stage where the project proves it is serious and organized. A successful pilot begins with discipline. If early revenue is possible, it should come from products that can be sold before the field crop matures. That might include imported syrup, fiber goods, or mushroom products. Early cash flow helps bridge the long growth cycle."
+      },
+      {
+        "number": 40,
+        "title": "Year-by-Year Roadmap",
+        "summary": "Provides a realistic five-year scaling path for the agave project.",
+        "content": "The roadmap should move from pilot to learning to scaling. Year one is for proof, year two for stabilization, year three for expansion, and years four and five for stronger production and market positioning. The timeline should be realistic. Agave is slow, so the business must also be patient. A long-term crop needs a long-term plan. The roadmap should build confidence without making false promises."
+      }
+    ],
+    "appendices": {
+      "A": {
+        "title": "Standard Operating Procedures",
+        "content": "Includes SOPs for import permit application, nursery care, syrup production, fiber extraction, mushroom production, sanitation, plant quarantine, label review, and export readiness."
+      },
+      "B": {
+        "title": "Training Quizzes",
+        "content": "Includes farmer and processor quizzes with answer keys."
+      },
+      "C": {
+        "title": "Compliance Roadmap for Agave Spirits",
+        "content": "Covers liquor licensing, excise, bottle labels, origin rules, and export-market compliance."
+      },
+      "D": {
+        "title": "Model Cooperative Constitution",
+        "content": "Contains sample legal wording for a producer cooperative."
+      },
+      "E": {
+        "title": "Costing Templates",
+        "content": "Contains budget templates for a pilot farm, nursery, import-to-launch, syrup line, fiber line, mushroom pilot, packaging, and scale-up."
+      },
+      "F": {
+        "title": "Contact Sheet",
+        "content": "Contains categories for suppliers and service providers, including planting material, packaging, irrigation, processing equipment, logistics, and legal support."
+      },
+      "G": {
+        "title": "Strategic Business Frameworks",
+        "content": "Includes competitive advantage analysis, technology gap analysis, team resilience, ROI by supply chain stage, and artisanal brand success metrics."
+      }
+    },
+    "complianceNotes": [
+      "Zimbabwe food-labelling requirements should be anchored to SI 265 of 2002.",
+      "Plant import material must follow phytosanitary and quarantine controls.",
+      "Cooperatives should align with Zimbabwe’s Co-Operative Societies Act.",
+      "Protected origin terms such as mezcal and tequila should not be used for non-Mexican spirit products."
+    ]
+  }
+}

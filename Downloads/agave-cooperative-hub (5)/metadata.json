@@ -1,0 +1,6 @@
+{
+  "name": "Agave Cooperative Hub",
+  "description": "Interactive training, standard operating procedures, costing models, and compliance roadmaps for sustainable Agave farming in Zimbabwe.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
