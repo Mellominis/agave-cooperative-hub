@@ -1,13 +1,14 @@
-import { initializeApp, getApps, getApp } from "firebase/app";
-import { getFirestore, doc, getDocFromServer } from "firebase/firestore";
+import { initializeApp } from 'firebase/app';
+import { getFirestore } from 'firebase/firestore';
 
 const firebaseConfig = {
-  apiKey: (import.meta as any).env.VITE_FIREBASE_API_KEY,
-  authDomain: (import.meta as any).env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: (import.meta as any).env.VITE_FIREBASE_PROJECT_ID,
-  appId: (import.meta as any).env.VITE_FIREBASE_APP_ID,
+  apiKey: "AIzaSyCr0xPdRMniiPjktern5BpzZN4Eyhb7Osw",
+  authDomain: "mellow-minis-hub.firebaseapp.com",
+  projectId: "mellow-minis-hub",
+  storageBucket: "mellow-minis-hub.firebasestorage.app",
+  messagingSenderId: "668704711609",
+  appId: "1:668704711609:web:9ed49994f5e8760468cc68"
 };
 
-// Initialize Firebase
-const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
+const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app);
