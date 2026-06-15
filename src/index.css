@@ -1,56 +1,35 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@300;400;500;600&family=Playfair+Display:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap');
 @import "tailwindcss";
 
 @theme {
-  --color-surface: #141310;
-  --color-surface-low: #0f0e0c;
-  --color-surface-mid: #1a1916;
-  --color-surface-high: #252320;
-  --color-noir: #0a0a0a;
-  --color-gold: #D4AF37;
-  --color-gold-dim: #b88a2a;
-  --color-cream: #e6e2dc;
-  --color-cream-dim: #b8b4af;
-  --color-outline: #2a2824;
+  --color-mellow-green: #2F4F35;
+  --color-mellow-tan: #D5B889;
+  --color-mellow-terracotta: #E87950;
+  --color-mellow-dark: #1A1A1A;
+  --color-mellow-light: #F9F7F2;
 
-  --font-sans: "Inter", system-ui, sans-serif;
-  --font-serif: "Playfair Display", serif;
-  --font-display: "Outfit", sans-serif;
+  --color-agave-50: #F9F7F2; /* Map agave neutral to mellow-light */
+  --color-agave-100: #F3ECD8;
+  --color-agave-200: #decfae;
+  --color-agave-300: #8cbba1;
+  --color-agave-400: #659b81;
+  --color-agave-500: #4a7861;
+  --color-agave-600: #2F4F35; /* Map agave green principal to mellow-green */
+  --color-agave-700: #223726;
+  --color-agave-800: #1a2a1d;
+  --color-agave-900: #131f15;
+  --color-agave-950: #1A1A1A; /* Map agave dark to mellow-dark */
+
+  --color-brand-denim: #3a5c70;
+  --color-brand-straw: #D5B889; /* Map brand straw to mellow-tan */
+
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  --font-display: "Space Grotesk", sans-serif;
 }
 
-@layer base {
-  body {
-    @apply bg-surface text-cream antialiased;
-    font-family: var(--font-sans);
-  }
-}
-
-@layer components {
-  .serif-title {
-    @apply font-serif tracking-tight text-cream;
-  }
-  
-  .label-caps {
-    @apply font-display text-[10px] uppercase tracking-[0.25em] font-medium text-cream;
-  }
-
-  .card-border {
-    @apply bg-surface border border-outline;
-  }
-
-  .upper-workout-card {
-    min-height: 140px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    transition: all 0.3s ease-in-out;
-  }
-
-  .cta-btn {
-    @apply bg-gold text-noir font-display text-[10px] uppercase tracking-[0.25em] font-bold px-8 py-3 hover:brightness-110 active:scale-95;
-  }
-
-  .btn-ghost {
-    @apply border border-outline text-cream font-display text-[10px] uppercase tracking-[0.25em] font-medium px-6 py-2.5 hover:bg-gold hover:text-noir hover:border-gold;
+@layer utilities {
+  .card {
+    @apply bg-white border border-agave-200/50 rounded-2xl p-6 md:p-8 shadow-[0_2px_12px_rgba(29,51,38,0.03)];
   }
 }

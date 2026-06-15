@@ -1,879 +1,355 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
-import "./index.css";
-import { APIProvider, useMap, useMapsLibrary } from "@vis.gl/react-google-maps";
-import { Compass, HelpCircle, User, Sparkles, MapPin, Layers, Info, Utensils } from "lucide-react";
-import Sidebar from "./components/Sidebar";
-import MapContainer from "./components/MapContainer";
-import PlaceDetailCard from "./components/PlaceDetailCard";
-import TastingJournalDashboard from "./components/TastingJournalDashboard";
-import { Message, PlacePin, GroundingChunk, ChatHistoryItem } from "./types";
-import AuthGate from "./components/AuthGate";
-import { onAuthStateChanged, signOut } from "firebase/auth";
-import { auth } from "./firebase";
-import { LocalizationProvider, useLocalization } from "./LocalizationContext";
+/**
+ * App.tsx
+ *
+ * Owns:
+ *   - LanguageProvider + AppContent shell
+ *   - Sticky header (branding, language selector, pilot badge, user badge)
+ *   - Country / subdomain resolution
+ *   - Navigation tabs + module rendering
+ *   - Footer
+ *   - Logout confirmation modal (triggered from header badge;
+ *     actual session clear is dispatched so AccessGate stays in sync)
+ *
+ * Auth / registration logic lives entirely in <AccessGate>.
+ * This file only tracks registeredUser so the header badge can display the name.
+ */
 
-// Exposing API standard keys following Constitution Rules
-const API_KEY =
-  process.env.GOOGLE_MAPS_PLATFORM_KEY ||
-  (import.meta as any).env?.VITE_GOOGLE_MAPS_PLATFORM_KEY ||
-  (globalThis as any).GOOGLE_MAPS_PLATFORM_KEY ||
-  "";
+import React, { useState, useEffect, useMemo } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
+import {
+  Sprout,
+  BookOpen,
+  Calculator,
+  Landmark,
+  ShieldCheck,
+  BarChart2,
+  Lock,
+  LogOut,
+  User,
+  Heart,
+  Globe,
+  Droplet,
+  AlertOctagon,
+  ClipboardList,
+} from 'lucide-react';
 
-const hasValidKey = Boolean(API_KEY) && API_KEY !== "YOUR_API_KEY";
+import AccessGate, { RegisteredUser } from './components/AccessGate';
+import SOPViewer from './components/SOPViewer';
+import PlantationCostingCalculator from './components/PlantationCostingCalculator';
+import CooperativeConstitutionGenerator from './components/CooperativeConstitutionGenerator';
+import ComplianceRoadmap from './components/ComplianceRoadmap';
+import TelemetrySimulator from './components/TelemetrySimulator';
+import MellowMinisLabel from './components/MellowMinisLabel';
+import ManualLibrary from './components/ManualLibrary';
+import MarketProbeTool from './components/MarketProbeTool';
+import WaterPlanner from './components/WaterPlanner';
+import PlantProvenanceLog from './components/PlantProvenanceLog';
+import PestDecisionTree from './components/PestDecisionTree';
 
-interface MapContentProps {
-  center: { lat: number; lng: number };
-  zoom: number;
-  pins: PlacePin[];
-  selectedPin: PlacePin | null;
-  onMapClick: (lat: number, lng: number) => void;
-  onPinSelect: (pin: PlacePin) => void;
-  onAutocompleteSelect: (lat: number, lng: number, name: string, address: string) => void;
-  onPinAdded: (pin: PlacePin) => void;
-  onSendMessage: (text: string) => void;
-  userGoal: string;
-  messages: Message[];
-  setMessages: React.Dispatch<React.SetStateAction<Message[]>>;
-  setPins: React.Dispatch<React.SetStateAction<PlacePin[]>>;
-  setCenter: (center: { lat: number; lng: number }) => void;
-  setZoom: (zoom: number) => void;
-  setPlaceName: (name: string) => void;
-  setSelectedPin: (pin: PlacePin | null) => void;
-  setLoading: (loading: boolean) => void;
-  loading: boolean;
-  onMapLoad?: (map: google.maps.Map | null) => void;
-}
+import { COUNTRIES } from './data/countries';
+import { LanguageProvider, useLanguage } from './LanguageContext';
 
-function MapContent({
-  center,
-  zoom,
-  pins,
-  selectedPin,
-  onMapClick,
-  onPinSelect,
-  onAutocompleteSelect,
-  onPinAdded,
-  onSendMessage,
-  userGoal,
-  messages,
-  setMessages,
-  setPins,
-  setCenter,
-  setZoom,
-  setPlaceName,
-  setSelectedPin,
-  setLoading,
-  loading,
-  onMapLoad,
-}: MapContentProps) {
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+type TabId =
+  | 'manual' | 'sop' | 'probe' | 'planner' | 'provenance'
+  | 'pest' | 'costing' | 'constitution' | 'compliance' | 'telemetry';
+
+const VALID_TABS: TabId[] = [
+  'manual', 'sop', 'probe', 'planner', 'provenance',
+  'pest', 'costing', 'constitution', 'compliance', 'telemetry',
+];
+
+// ─── Root ─────────────────────────────────────────────────────────────────────
+
+export default function App() {
   return (
-    <>
-      <MapContainer
-        center={center}
-        zoom={zoom}
-        pins={pins}
-        selectedPin={selectedPin}
-        onMapClick={onMapClick}
-        onPinSelect={onPinSelect}
-        onAutocompleteSelect={onAutocompleteSelect}
-        onPinAdded={onPinAdded}
-        onMapLoad={onMapLoad}
-      />
-
-      {selectedPin && (
-        <PlaceDetailCard
-          place={selectedPin}
-          onClose={() => setSelectedPin(null)}
-          onAskChat={(queryText) => onSendMessage(queryText)}
-          onRecommendMenu={async (placeId, name) => {
-            if (loading) return;
-            setLoading(true);
-
-            const userMsg: Message = {
-              id: `user-${Date.now()}`,
-              role: "user",
-              text: `Suggest custom order recommendations for **${name}** aligned with my nutrition focus! 🍽️`,
-              timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-            };
-            setMessages((prev: Message[]) => [...prev, userMsg]);
-
-            try {
-              const res = await fetch("/api/menu-recommendations", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ placeId, restaurantName: name, userGoal }),
-              });
-
-              if (res.ok) {
-                const data = await res.json();
-                const coachMsg: Message = {
-                  id: `bot-${Date.now()}`,
-                  role: "model",
-                  text: data.recommendations || "No recommendations available.",
-                  timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-                };
-                setMessages((prev: Message[]) => [...prev, coachMsg]);
-              } else {
-                throw new Error("Menu service unavailable");
-              }
-            } catch (e: any) {
-              console.error(e);
-              const errMsg: Message = {
-                id: `error-${Date.now()}`,
-                role: "model",
-                text: `⚠️ Could not get menu recommendations for **${name}**.`,
-                timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-              };
-              setMessages((prev: Message[]) => [...prev, errMsg]);
-            } finally {
-              setLoading(false);
-            }
-          }}
-        />
-      )}
-    </>
+    <LanguageProvider>
+      <AppContent />
+    </LanguageProvider>
   );
 }
 
-// Master GeoConcierge App component containing state context and Google Maps logic
-interface GeoConciergeAppProps {
-  user?: any;
-  onSignOut?: () => void;
-}
+// ─── AppContent ───────────────────────────────────────────────────────────────
 
-function GeoConciergeApp({ user, onSignOut }: GeoConciergeAppProps = {}) {
-  const { t, language } = useLocalization();
-  const [map, setMapInstance] = useState<google.maps.Map | null>(null);
-  const placesLib = useMapsLibrary("places");
-  
-  // Geolocation states
-  const [center, setCenter] = useState<{ lat: number; lng: number }>({ lat: 47.6062, lng: -122.3321 }); // Standard: Seattle, WA
-  const [zoom, setZoom] = useState<number>(12);
-  const [placeName, setPlaceName] = useState<string>("Seattle, WA");
-  
-  // Master active markers & panels
-  const [pins, setPins] = useState<PlacePin[]>([]);
-  const [selectedPin, setSelectedPin] = useState<PlacePin | null>(null);
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [loading, setLoading] = useState<boolean>(false);
-  const [userGoal, setUserGoal] = useState<string>("gain_muscle");
-  
-  // Voice coach session state
-  const [gerdySessionState, setGerdySessionState] = useState<any>({
-    activeSubMode: null,
-    placeType: null
-  });
+function AppContent() {
+  const { t, language, setLanguage } = useLanguage();
 
-  // Dual-mode layout state to toggle between Google Maps and Tasting Journal Dashboard
-  const [rightPaneView, setRightPaneView] = useState<"map" | "tasting">("map");
-  const [activeTab, setActiveTab] = useState<"chat" | "dashboard" | "workoutHub" | "nutrition" | "journal">("chat");
+  // Auth state — synced from AccessGate via onAuthChange; used only for header badge
+  const [registeredUser, setRegisteredUser] = useState<RegisteredUser | null>(null);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
 
-  // Initialize coordinates context with user's geolocation if granted
+  // Navigation
+  const [activeTab, setActiveTab] = useState<TabId>('manual');
+
+  // Country / subdomain
+  const [selectedCountryId, setSelectedCountryId] = useState<string>('zimbabwe');
+
   useEffect(() => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          const lat = pos.coords.latitude;
-          const lng = pos.coords.longitude;
-          setCenter({ lat, lng });
-          setZoom(13);
-          setPlaceName("My Current Location");
-          
-          // Plant initial geocoordinate pin
-          const myLocationPin: PlacePin = {
-            id: "my-location",
-            name: "My Location",
-            lat,
-            lng,
-            address: "Your browser geocoordinates context",
-            source: "user_click"
-          };
-          setPins([myLocationPin]);
-        },
-        (err) => {
-          console.log("Geolocation permission declined or unnavigable. Utilizing default focal center Seattle.", err);
-        }
-      );
+    try {
+      const firstPart = window.location.hostname.split('.')[0].toLowerCase();
+      const match = COUNTRIES.find((c) => c.id === firstPart);
+      setSelectedCountryId(match ? match.id : 'zimbabwe');
+    } catch {
+      setSelectedCountryId('zimbabwe');
     }
   }, []);
 
-  // Map Click handler (places purple temporary pin and reverses geocode to find description / address)
-  const handleMapClick = (lat: number, lng: number) => {
-    // Zoom in slightly on selection 
-    setCenter({ lat, lng });
-    setZoom(14);
-    
-    if (typeof google === "undefined" || !google.maps || !google.maps.Geocoder) {
-      console.warn("Google Geocoder is not yet active/authorized.");
-      const resolvedAddress = `Point at (${lat.toFixed(4)}, ${lng.toFixed(4)})`;
-      const clickedPin: PlacePin = {
-        id: `click-${Date.now()}`,
-        name: `Custom pin (${lat.toFixed(4)}, ${lng.toFixed(4)})`,
-        lat,
-        lng,
-        address: resolvedAddress,
-        source: "user_click"
-      };
-      setPins((prev) => {
-        const withoutOldClicks = prev.filter((p) => p.source !== "user_click");
-        return [...withoutOldClicks, clickedPin];
-      });
-      setSelectedPin(clickedPin);
-      return;
-    }
+  const currentCountry = useMemo(
+    () => COUNTRIES.find((c) => c.id === selectedCountryId) ?? COUNTRIES[0],
+    [selectedCountryId],
+  );
 
-    // Call client-side reverse geocoder
-    const geocoder = new google.maps.Geocoder();
-    geocoder.geocode({ location: { lat, lng } }, (results, status) => {
-      let resolvedAddress = "Unknown custom point";
-      if (status === "OK" && results && results[0]) {
-        resolvedAddress = results[0].formatted_address;
-      }
-      
-      const newPinName = `Custom pin (${lat.toFixed(4)}, ${lng.toFixed(4)})`;
-      setPlaceName(resolvedAddress);
-
-      const clickedPin: PlacePin = {
-        id: `click-${Date.now()}`,
-        name: newPinName,
-        lat,
-        lng,
-        address: resolvedAddress,
-        source: "user_click"
-      };
-
-      // Set as active selected pin and add to map pins list
-      setPins((prev) => {
-        // Filter previous click pins to avoid multiple junk click markers
-        const withoutOldClicks = prev.filter((p) => p.source !== "user_click");
-        return [...withoutOldClicks, clickedPin];
-      });
-      setSelectedPin(clickedPin);
-    });
+  // ── Auth change from AccessGate ──
+  const handleAuthChange = (user: RegisteredUser | null) => {
+    setRegisteredUser(user);
+    if (!user) setActiveTab('manual');
   };
 
-  // Callback returning Autocomplete choices from searchbars
-  const handleAutocompleteSelect = (lat: number, lng: number, name: string, address: string) => {
-    setCenter({ lat, lng });
-    setZoom(15);
-    setPlaceName(name);
+  // ── Logout: triggered from header, cleared via storage event → AccessGate ──
+  const handleLogoutRequest = () => setShowResetConfirm(true);
+
+  const handleLogoutConfirm = () => {
+    try { localStorage.removeItem('agave_registered_user'); } catch { /* silent */ }
+    window.dispatchEvent(new Event('agave_registration_changed'));
+    setShowResetConfirm(false);
   };
 
-  const handleAddNewPin = (newPin: PlacePin) => {
-    setPins((prev) => {
-      // Prevent duplicates
-      if (prev.some((p) => p.id === newPin.id)) return prev;
-      return [...prev, newPin];
-    });
-    setSelectedPin(newPin);
-  };
-
-  // Handles clicking a Map Marker pin to fetch details dynamically via PlacesService
-  const handlePinSelect = (pin: PlacePin) => {
-    setSelectedPin(pin);
-    setCenter({ lat: pin.lat, lng: pin.lng });
-
-    // Validate that the ID is a real Google Place ID and not one of our synthetic/mock IDs before calling getDetails
-    const isValidId = pin.id && 
-      !pin.id.startsWith("click-") && 
-      !pin.id.startsWith("search-") && 
-      !pin.id.startsWith("grounding-") && 
-      !pin.id.startsWith("preset-") && 
-      !pin.id.startsWith("bot-") && 
-      !pin.id.startsWith("user-") && 
-      !pin.id.startsWith("error-") && 
-      pin.id !== "my-location";
-
-    // Try fetching dense data dynamically from google places service if we only have summary coordinates
-    if (!map || !placesLib || !isValidId) {
-      return;
-    }
-
-    if (typeof google === "undefined" || !google.maps || !google.maps.places || !google.maps.places.PlacesService) {
-      console.warn("Google PlacesService is not currently available/authenticated.");
-      return;
-    }
-
-    const service = new google.maps.places.PlacesService(map);
-    service.getDetails(
-      {
-        placeId: pin.id,
-        fields: ["name", "formatted_address", "formatted_phone_number", "website", "rating", "opening_hours", "photos", "user_ratings_total"],
-      },
-      (place, status) => {
-        if (status === google.maps.places.PlacesServiceStatus.OK && place) {
-          // Extract weekday hours
-          const weekdayText = place.opening_hours?.weekday_text || [];
-          // Extract photo url
-          let photoUrls: string[] = [];
-          if (place.photos && place.photos.length > 0) {
-            photoUrls = [place.photos[0].getUrl({ maxWidth: 600 })];
-          }
-
-          const detailedPin: PlacePin = {
-            ...pin,
-            name: place.name || pin.name,
-            address: place.formatted_address || pin.address,
-            phone: place.formatted_phone_number || undefined,
-            website: place.website || undefined,
-            weekdayText: weekdayText.length > 0 ? weekdayText : undefined,
-            rating: place.rating || pin.rating,
-            userRatingCount: place.user_ratings_total || pin.userRatingCount,
-            photos: photoUrls.length > 0 ? photoUrls : pin.photos,
-          };
-
-          // Update active marker states
-          setPins((prev) => prev.map((p) => (p.id === pin.id ? detailedPin : p)));
-          setSelectedPin(detailedPin);
-        }
-      }
-    );
-  };
-
-  // Master handler syncing full-stack chatbot query using Maps Grounding server-side
-  const handleSendMessage = async (text: string) => {
-    if (loading) return;
-    setLoading(true);
-
-    const userMsg: Message = {
-      id: `user-${Date.now()}`,
-      role: "user",
-      text,
-      timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-    };
-
-    setMessages((prev) => [...prev, userMsg]);
-
-    try {
-      const lowerMsg = text.toLowerCase();
-
-      // Check for voice-coach find submode triggers
-      if (lowerMsg.includes('find gym') || lowerMsg.includes('nearby gym')) {
-        setGerdySessionState({ activeSubMode: 'findPlace', placeType: 'gym' });
-        
-        const welcomeText = `Let me find gyms near you! I'll need your location permission. Ready? 🗺️`;
-        const initialBotMsg: Message = {
-          id: `bot-${Date.now()}-welcome`,
-          role: "model",
-          text: welcomeText,
-          timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-        };
-        setMessages((prev) => [...prev, initialBotMsg]);
-        
-        // Trigger locating and find spots
-        let searchCoords = { lat: center?.lat || 47.6062, lng: center?.lng || -122.3321 };
-        if (navigator.geolocation) {
-          try {
-            const pos: any = await new Promise((res, rej) => {
-              navigator.geolocation.getCurrentPosition(res, rej, { timeout: 3500 });
-            });
-            searchCoords = {
-              lat: pos.coords.latitude,
-              lng: pos.coords.longitude
-            };
-            setCenter(searchCoords);
-            setZoom(14);
-            setPlaceName("My Current Location");
-          } catch (e) {
-            console.log('Location request timed out or cancelled, seeking current center.');
-          }
-        }
-        
-        // Perform search
-        const searchRes = await fetch("/api/maps-search", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            query: "gyms and workout centers near me",
-            userLat: searchCoords.lat,
-            userLng: searchCoords.lng,
-            userGoal,
-          }),
-        });
-
-        if (searchRes.ok) {
-          const searchData = await searchRes.json();
-          const botResultMsg: Message = {
-            id: `bot-${Date.now()}-result`,
-            role: "model",
-            text: searchData.gerdyMessage,
-            timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-          };
-          setMessages((prev) => [...prev, botResultMsg]);
-
-          if (searchData.places && Array.isArray(searchData.places)) {
-            const newPins: PlacePin[] = searchData.places.map((place: any, index: number) => ({
-              id: place.id || `search-result-${index}-${Date.now()}`,
-              name: place.displayName?.text || "Recommended Spot",
-              lat: place.location?.latitude,
-              lng: place.location?.longitude,
-              address: place.formattedAddress,
-              rating: place.rating,
-              userRatingCount: place.userRatingCount,
-              source: "grounding"
-            })).filter((p: any) => typeof p.lat === "number" && typeof p.lng === "number");
-
-            if (newPins.length > 0) {
-              setPins((prev) => {
-                const withoutOldGrounding = prev.filter(p => p.source !== "grounding");
-                return [...withoutOldGrounding, ...newPins];
-              });
-              setCenter({ lat: newPins[0].lat, lng: newPins[0].lng });
-              setZoom(14);
-            }
-          }
-        }
-        setLoading(false);
-        return;
-      }
-
-      if (lowerMsg.includes('healthy restaurant') || lowerMsg.includes('where to eat')) {
-        setGerdySessionState({ activeSubMode: 'findPlace', placeType: 'restaurant' });
-        
-        const welcomeText = `Finding healthy restaurants near you! ${
-          userGoal === 'lose_weight' 
-            ? "I'll prioritize places with lighter options." 
-            : "Looking for protein-rich spots!"
-        } 🍽️`;
-        
-        const initialBotMsg: Message = {
-          id: `bot-${Date.now()}-welcome`,
-          role: "model",
-          text: welcomeText,
-          timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-        };
-        setMessages((prev) => [...prev, initialBotMsg]);
-
-        // Trigger locating and find spots
-        let searchCoords = { lat: center?.lat || 47.6062, lng: center?.lng || -122.3321 };
-        if (navigator.geolocation) {
-          try {
-            const pos: any = await new Promise((res, rej) => {
-              navigator.geolocation.getCurrentPosition(res, rej, { timeout: 3500 });
-            });
-            searchCoords = {
-              lat: pos.coords.latitude,
-              lng: pos.coords.longitude
-            };
-            setCenter(searchCoords);
-            setZoom(14);
-            setPlaceName("My Current Location");
-          } catch (e) {
-            console.log('Location request timed out or cancelled, seeking current center.');
-          }
-        }
-        
-        // Perform search
-        const queryTerm = userGoal === 'lose_weight' ? "healthy salads weight loss restaurant" : "high protein muscles nutrition cafe";
-        const searchRes = await fetch("/api/maps-search", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            query: queryTerm,
-            userLat: searchCoords.lat,
-            userLng: searchCoords.lng,
-            userGoal,
-          }),
-        });
-
-        if (searchRes.ok) {
-          const searchData = await searchRes.json();
-          const botResultMsg: Message = {
-            id: `bot-${Date.now()}-result`,
-            role: "model",
-            text: searchData.gerdyMessage,
-            timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-          };
-          setMessages((prev) => [...prev, botResultMsg]);
-
-          if (searchData.places && Array.isArray(searchData.places)) {
-            const newPins: PlacePin[] = searchData.places.map((place: any, index: number) => ({
-              id: place.id || `search-result-${index}-${Date.now()}`,
-              name: place.displayName?.text || "Recommended Spot",
-              lat: place.location?.latitude,
-              lng: place.location?.longitude,
-              address: place.formattedAddress,
-              rating: place.rating,
-              userRatingCount: place.userRatingCount,
-              source: "grounding"
-            })).filter((p: any) => typeof p.lat === "number" && typeof p.lng === "number");
-
-            if (newPins.length > 0) {
-              setPins((prev) => {
-                const withoutOldGrounding = prev.filter(p => p.source !== "grounding");
-                return [...withoutOldGrounding, ...newPins];
-              });
-              setCenter({ lat: newPins[0].lat, lng: newPins[0].lng });
-              setZoom(14);
-            }
-          }
-        }
-        setLoading(false);
-        return;
-      }
-
-      // Check if message text matches standard search commands for gyms, workout spots, healthy food, eating nearby, etc.
-      const isSearchPattern = text.toLowerCase().match(/(find|locate|near me|gym|restaurant|eat|workout|park|food|trail|running|exercise)/);
-
-      if (isSearchPattern) {
-        const searchRes = await fetch("/api/maps-search", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            query: text,
-            userLat: center?.lat,
-            userLng: center?.lng,
-            userGoal,
-          }),
-        });
-
-        if (searchRes.ok) {
-          const searchData = await searchRes.json();
-          
-          const botMsg: Message = {
-            id: `bot-${Date.now()}`,
-            role: "model",
-            text: searchData.gerdyMessage,
-            timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-          };
-
-          setMessages((prev) => [...prev, botMsg]);
-
-          // Dynamically plot returned points of interest as recommendation pins
-          if (searchData.places && Array.isArray(searchData.places)) {
-            const newPins: PlacePin[] = searchData.places.map((place: any, index: number) => {
-              const pLat = place.location?.latitude;
-              const pLng = place.location?.longitude;
-              const name = place.displayName?.text || "Recommended Spot";
-              return {
-                id: place.id || `search-result-${index}-${Date.now()}`,
-                name: name,
-                lat: pLat,
-                lng: pLng,
-                address: place.formattedAddress,
-                rating: place.rating,
-                userRatingCount: place.userRatingCount,
-                source: "grounding"
-              };
-            }).filter((p: any) => typeof p.lat === "number" && typeof p.lng === "number");
-
-            if (newPins.length > 0) {
-              setPins((prev) => {
-                // Keep existing search / clicked pins, replace grounding pins of this query
-                const withoutOldGrounding = prev.filter(p => p.source !== "grounding");
-                const combined = [...withoutOldGrounding, ...newPins];
-                return combined.filter((p, idx, self) => self.findIndex(o => o.id === p.id) === idx);
-              });
-
-              // Slide zoom & view to focus on the top gym/facility pin automatically
-              setCenter({ lat: newPins[0].lat, lng: newPins[0].lng });
-              setZoom(14);
-            }
-          }
-
-          setLoading(false);
-          return;
-        }
-      }
-
-      // Map chat messages context to pass history, including the latest user message
-      const updatedMessages = [...messages, userMsg];
-      const historyContext: ChatHistoryItem[] = updatedMessages.map((m) => ({
-        role: m.role,
-        text: m.text,
-      }));
-
-      // Server POST communication (CORS-safe and key protected)
-      const res = await fetch("/api/chat", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          message: text,
-          lat: center.lat,
-          lng: center.lng,
-          history: historyContext,
-          userGoal,
-          language,
-        }),
-      });
-
-      if (!res.ok) {
-        throw new Error(`API returned communication error code ${res.status}`);
-      }
-
-      const data = await res.json();
-
-      // Extract coordinates & references
-      const references: GroundingChunk[] = [];
-      const rawChunks = data.groundingMetadata?.groundingChunks || [];
-      
-      rawChunks.forEach((chunk: any) => {
-        const title = chunk.maps?.title || chunk.web?.title || "Real-Time Grounding Context";
-        const uri = chunk.maps?.uri || chunk.web?.uri || "";
-        references.push({ title, uri });
-      });
-
-      const botMsg: Message = {
-        id: `bot-${Date.now()}`,
-        role: "model",
-        text: data.text,
-        timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-        references: references.length > 0 ? references : undefined,
-      };
-
-      setMessages((prev) => [...prev, botMsg]);
-
-      // Dynamic Marker Plotting:
-      // Loop over grounding references and query Places service client-side to place emerald green recommendation pins!
-      if (placesLib && map && rawChunks.length > 0) {
-        if (typeof google === "undefined" || !google.maps || !google.maps.places || !google.maps.places.PlacesService) {
-          console.warn("Google PlacesService is not available/authorized for grounding searches.");
-          setLoading(false);
-          return;
-        }
-        const service = new google.maps.places.PlacesService(map);
-        
-        rawChunks.forEach((chunk: any, index: number) => {
-          const title = chunk.maps?.title || chunk.web?.title;
-          if (!title) return;
-
-          // Perform lightweight Places text search relative to the focal map center
-          service.textSearch(
-            {
-              query: title,
-              location: new google.maps.LatLng(center.lat, center.lng),
-              radius: 5000,
-            },
-            (results, status) => {
-              if (status === google.maps.places.PlacesServiceStatus.OK && results && results[0]) {
-                const venue = results[0];
-                const lat = venue.geometry?.location?.lat();
-                const lng = venue.geometry?.location?.lng();
-
-                if (typeof lat === "number" && typeof lng === "number") {
-                  const verifiedPin: PlacePin = {
-                    id: venue.place_id || `grounding-${index}-${Date.now()}`,
-                    name: venue.name || title,
-                    lat,
-                    lng,
-                    address: venue.formatted_address,
-                    rating: venue.rating,
-                    userRatingCount: venue.user_ratings_total,
-                    source: "grounding",
-                  };
-
-                  // Append grounding pin
-                  setPins((prev) => {
-                    if (prev.some((p) => p.id === verifiedPin.id)) return prev;
-                    return [...prev, verifiedPin];
-                  });
-                }
-              }
-            }
-          );
-        });
-      }
-    } catch (error: any) {
-      console.error("Chat Error:", error);
-      const errorMsg: Message = {
-        id: `error-${Date.now()}`,
-        role: "model",
-        text: `⚠️ **Connection Error**: ${error?.message || "Could not retrieve chatbot answer from Express server. Ensure your GEMINI_API_KEY is configured."}`,
-        timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-      };
-      setMessages((prev) => [...prev, errorMsg]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleClearHistory = () => {
-    setMessages([]);
-    setPins((prev) => prev.filter((p) => p.source === "user_click"));
-    setSelectedPin(null);
-  };
-
-  const handleAddressSearch = (addressText: string) => {
-    if (typeof google === "undefined" || !google.maps || !google.maps.Geocoder) {
-      console.warn("Google Geocoder is not yet active.");
-      return;
-    }
-    const geocoder = new google.maps.Geocoder();
-    geocoder.geocode({ address: addressText }, (results, status) => {
-      if (status === "OK" && results && results[0]) {
-        const location = results[0].geometry.location;
-        const lat = location.lat();
-        const lng = location.lng();
-        const address = results[0].formatted_address;
-        
-        setCenter({ lat, lng });
-        setZoom(14);
-        setPlaceName(address);
-
-        const newPin: PlacePin = {
-          id: `preset-${Date.now()}`,
-          name: addressText,
-          lat,
-          lng,
-          address,
-          source: "autocomplete_search"
-        };
-        setPins((prev) => {
-          if (prev.some((p) => p.name.toLowerCase() === addressText.toLowerCase())) return prev;
-          return [...prev, newPin];
-        });
-        setSelectedPin(newPin);
-      } else {
-        console.warn("Geocoding failed relative to: " + status);
-      }
-    });
-  };
+  // ── Tab config ──
+  const tabs: { id: TabId; icon: React.ElementType; label: string }[] = [
+    { id: 'manual',       icon: BookOpen,      label: t.tabs.manual },
+    { id: 'sop',          icon: ClipboardList, label: t.tabs.sop },
+    { id: 'probe',        icon: User,          label: t.tabs.probe },
+    { id: 'planner',      icon: Droplet,       label: t.tabs.planner },
+    { id: 'provenance',   icon: Sprout,        label: t.tabs.provenance },
+    { id: 'pest',         icon: AlertOctagon,  label: t.tabs.pest },
+    { id: 'costing',      icon: Calculator,    label: t.tabs.costing },
+    { id: 'constitution', icon: Landmark,      label: t.tabs.constitution },
+    { id: 'compliance',   icon: ShieldCheck,   label: t.tabs.compliance },
+    { id: 'telemetry',    icon: BarChart2,     label: t.tabs.telemetry },
+  ];
 
   return (
-    <div className="w-full h-screen h-[100dvh] flex flex-col md:flex-row bg-slate-50 overflow-hidden font-sans">
-      {/* Sidebar Layout */}
-      <Sidebar
-        messages={messages}
-        setMessages={setMessages}
-        onSendMessage={handleSendMessage}
-        loading={loading}
-        currentCoordinates={center}
-        currentPlaceName={placeName}
-        onClearHistory={handleClearHistory}
-        userGoal={userGoal}
-        setUserGoal={setUserGoal}
-        onReferenceClick={(lat, lng, name) => {
-          setCenter({ lat, lng });
-          setZoom(16);
-          setPlaceName(name);
-        }}
-        pins={pins}
-        selectedPin={selectedPin}
-        onPinSelect={handlePinSelect}
-        onAddressSearch={handleAddressSearch}
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
-      />
+    <div
+      id="app-root"
+      className="min-h-screen bg-stone-50 text-stone-900 font-sans selection:bg-agave-100 selection:text-agave-950 flex flex-col justify-between"
+    >
+      {/* ── Header ──────────────────────────────────────────────────────────── */}
+      <header className="border-b border-stone-200/65 bg-white/80 backdrop-blur-md sticky top-0 z-40 shadow-xs">
+        <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between gap-4">
 
-      {/* Main Interactive Map Layout container */}
-      <div className={`flex-1 ${activeTab === "chat" ? "hidden md:flex" : "h-[50dvh] md:h-full"} relative border-t md:border-t-0 p-0 m-0 overflow-hidden flex flex-col`}>
-        {rightPaneView === "tasting" ? (
-          <TastingJournalDashboard onToggleMap={() => setRightPaneView("map")} />
-        ) : (
-          <div className="w-full h-full flex flex-col bg-[#0b0f19]">
-            {/* Compact Structured Header */}
-            <div className="w-full p-2 bg-[#0e1424]/45 border-b border-slate-900 flex items-center justify-between gap-2 shrink-0 select-none">
-              <div className="flex items-center gap-1.5">
-                <span className="text-xs">🍴</span>
-                <h2 className="text-[10px] sm:text-xs font-bold tracking-wider text-slate-300 uppercase">
-                  {t("dashboard.header")}
-                </h2>
-              </div>
-              
-              <button
-                onClick={() => setRightPaneView("tasting")}
-                className="bg-purple-900/30 text-purple-200 border border-purple-500/25 px-2.5 py-1 rounded-lg text-[10px] font-bold tracking-wide hover:bg-purple-600 hover:text-white transition duration-200 cursor-pointer active:scale-95 flex items-center gap-1 shrink-0"
-                title="Switch to Tasting and Wellness Journal"
-              >
-                <Utensils className="w-3" />
-                <span>Open Dashboard</span>
-              </button>
+          {/* Branding */}
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 flex-shrink-0 flex items-center justify-center">
+              <MellowMinisLabel size="sm" interactive={true} />
             </div>
-
-            {/* Map Canvas Wrapper */}
-            <div className="relative flex-1 w-full min-h-[350px]">
-              {pins.length === 0 && (
-                <div className="absolute top-18 right-4 bg-slate-900/90 text-white text-xs font-medium px-4 py-2.5 rounded-xl border border-slate-800 z-10 shadow-2xl backdrop-blur flex items-center gap-2 max-w-sm animate-in fade-in slide-in-from-top duration-300">
-                  <Info className="w-4 h-4 text-cyan-400 flex-shrink-0" />
-                  <p>Click on coordinates or search destinations to establish a focal context for the chatbot.</p>
-                </div>
-              )}
-
-              <MapContent
-                center={center}
-                zoom={zoom}
-                pins={pins}
-                selectedPin={selectedPin}
-                onMapClick={handleMapClick}
-                onPinSelect={handlePinSelect}
-                onAutocompleteSelect={handleAutocompleteSelect}
-                onPinAdded={handleAddNewPin}
-                onSendMessage={handleSendMessage}
-                userGoal={userGoal}
-                messages={messages}
-                setMessages={setMessages}
-                setPins={setPins}
-                setCenter={setCenter}
-                setZoom={setZoom}
-                setPlaceName={setPlaceName}
-                setSelectedPin={setSelectedPin}
-                setLoading={setLoading}
-                loading={loading}
-                onMapLoad={setMapInstance}
-              />
+            <div>
+              <span className="text-sm font-extrabold text-stone-900 uppercase font-display tracking-tight block">
+                {t.common.appTitle}
+              </span>
+              <span className="text-[9px] text-stone-500 font-mono tracking-widest uppercase block font-bold">
+                {t.common.appSubtitle}
+              </span>
             </div>
           </div>
-        )}
-      </div>
+
+          {/* Controls */}
+          <div className="flex items-center gap-3">
+
+            {/* Language */}
+            <div
+              id="language-toggle"
+              className="relative flex items-center gap-1.5 bg-white border border-stone-250 hover:border-agave-500 rounded-xl px-2.5 py-1.5 shadow-2xs transition-all"
+            >
+              <Globe className="w-3.5 h-3.5 text-agave-600 animate-pulse" />
+              <select
+                id="language-selector"
+                value={language}
+                onChange={(e) => setLanguage(e.target.value as any)}
+                className="bg-transparent text-xs font-bold text-stone-800 focus:outline-none cursor-pointer pr-1"
+                aria-label="Language Selector"
+              >
+                <option value="en">English</option>
+                <option value="sn">ChiShona</option>
+                <option value="nd">isiNdebele</option>
+              </select>
+            </div>
+
+            {/* Pilot badge */}
+            <div
+              id="pilot-indicator"
+              className="hidden sm:flex items-center gap-1.5 bg-stone-100 border border-stone-200 px-3 py-1.5 rounded-xl"
+            >
+              <span className="text-[11px] font-sans font-extrabold text-stone-750 tracking-wider uppercase flex items-center gap-1">
+                <span>🇿🇼</span> {t.common.pilotNetwork}
+              </span>
+            </div>
+
+            {/* User badge / guest pill */}
+            {registeredUser ? (
+              <div id="user-badge" className="flex items-center gap-2 bg-stone-50 border border-stone-200 p-1 rounded-xl">
+                <div className="w-7 h-7 rounded-lg bg-agave-100 text-agave-750 flex items-center justify-center text-xs font-bold">
+                  <User className="w-3.5 h-3.5" />
+                </div>
+                <div className="hidden lg:block text-left pr-2 leading-none">
+                  <span className="text-[11px] font-extrabold text-stone-800 block capitalize truncate max-w-[120px]">
+                    {registeredUser.fullName || 'grower'}
+                  </span>
+                  <span className="text-[8px] text-stone-400 font-mono block truncate max-w-[100px]">
+                    {registeredUser.enterpriseName || t.common.smallholder}
+                  </span>
+                </div>
+                <button
+                  id="reset-profile-btn"
+                  type="button"
+                  onClick={handleLogoutRequest}
+                  title="Logout / Reset credentials"
+                  className="p-1 px-2.5 rounded-lg border border-stone-200 text-stone-400 hover:text-red-500 hover:border-red-200 bg-white hover:bg-red-50 transition-all cursor-pointer flex items-center gap-1 text-xs font-bold"
+                >
+                  <LogOut className="w-3 h-3" />
+                  <span className="hidden sm:inline text-[10px]">{t.common.logout}</span>
+                </button>
+              </div>
+            ) : (
+              <span
+                id="guest-preview-badge"
+                className="inline-flex items-center gap-1.5 bg-amber-50 text-amber-800 border border-amber-200/60 text-[9px] font-extrabold px-2.5 py-1.5 rounded-full uppercase tracking-wider"
+              >
+                <Lock className="w-3 h-3" />
+                {t.common.guestMode}
+              </span>
+            )}
+          </div>
+        </div>
+      </header>
+
+      {/* ── Main ────────────────────────────────────────────────────────────── */}
+      <main className="flex-grow">
+        <AccessGate onAuthChange={handleAuthChange}>
+          {/* Only rendered when AccessGate confirms user is registered + approved */}
+          <div className="max-w-7xl mx-auto px-4 py-6">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+              {/* Tab bar */}
+              <div className="lg:col-span-12">
+                <div
+                  className="bg-white border border-stone-200 p-2 rounded-2xl shadow-xs flex flex-wrap gap-1.5 justify-start select-none"
+                  role="tablist"
+                >
+                  {tabs.map(({ id, icon: Icon, label }) => (
+                    <button
+                      key={id}
+                      onClick={() => setActiveTab(id)}
+                      role="tab"
+                      aria-selected={activeTab === id}
+                      className={`flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer focus:outline-none ${
+                        activeTab === id
+                          ? 'bg-agave-650 text-white shadow shadow-agave-600/10'
+                          : 'text-stone-600 hover:text-stone-900 hover:bg-stone-50'
+                      }`}
+                    >
+                      <Icon className="w-4 h-4" />
+                      <span>{label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Active panel */}
+              <div className="lg:col-span-12 min-h-[440px]" role="tabpanel">
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={`${activeTab}_${selectedCountryId}`}
+                    initial={{ opacity: 0, y: 5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -5 }}
+                    transition={{ duration: 0.12 }}
+                    id={`${activeTab}-content`}
+                  >
+                    {activeTab === 'manual'       && <ManualLibrary currentCountryId={selectedCountryId} />}
+                    {activeTab === 'sop'           && <SOPViewer currentCountryId={selectedCountryId} />}
+                    {activeTab === 'probe'         && <MarketProbeTool currentCountryId={selectedCountryId} />}
+                    {activeTab === 'planner'       && <WaterPlanner currentCountryId={selectedCountryId} />}
+                    {activeTab === 'provenance'    && <PlantProvenanceLog currentCountryId={selectedCountryId} />}
+                    {activeTab === 'pest'          && <PestDecisionTree />}
+                    {activeTab === 'costing'       && <PlantationCostingCalculator />}
+                    {activeTab === 'constitution'  && <CooperativeConstitutionGenerator currentCountryId={selectedCountryId} />}
+                    {activeTab === 'compliance'    && <ComplianceRoadmap currentCountryId={selectedCountryId} />}
+                    {activeTab === 'telemetry'     && <TelemetrySimulator />}
+
+                    {!VALID_TABS.includes(activeTab) && (
+                      <div className="text-center text-stone-500 py-16 bg-white border border-stone-200 rounded-3xl">
+                        <BookOpen className="w-12 h-12 mx-auto mb-4 text-stone-300" />
+                        <p className="text-xs font-bold uppercase tracking-wider">Module Not Found</p>
+                        <p className="text-xs mt-1 text-stone-400">
+                          Please select an alternative tab from the workspace panel.
+                        </p>
+                      </div>
+                    )}
+                  </motion.div>
+                </AnimatePresence>
+              </div>
+
+            </div>
+          </div>
+        </AccessGate>
+      </main>
+
+      {/* ── Footer ──────────────────────────────────────────────────────────── */}
+      <footer
+        id="hub-footer"
+        className="border-t border-stone-200 bg-white py-6 mt-12 text-center text-xs text-stone-500 font-sans shadow-2xs"
+      >
+        <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-2 font-medium">
+            <Sprout className="w-4 h-4 text-emerald-600" />
+            <span>
+              © {new Date().getFullYear()} {t.common.copyrightText}{' '}
+              <strong>{currentCountry.name}</strong>.
+            </span>
+          </div>
+          <div className="flex items-center gap-1.5 text-stone-400 font-semibold text-[10px] uppercase tracking-wider">
+            <span>Administered by Mellow Minis Core Trust</span>
+            <span className="w-1 h-1 rounded-full bg-stone-300" />
+            <span>{t.common.madeWith}</span>
+            <Heart className="w-3.5 h-3.5 text-red-650 fill-red-650 inline" />
+            <span>{t.common.forSmallholders}</span>
+          </div>
+        </div>
+      </footer>
+
+      {/* ── Logout confirmation modal ────────────────────────────────────────── */}
+      {showResetConfirm && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-stone-900/60 backdrop-blur-xs animate-fadeIn">
+          <div className="bg-white border border-stone-200 rounded-3xl p-6 max-w-sm w-full shadow-2xl text-center">
+            <div className="w-12 h-12 bg-red-50 text-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
+              <LogOut className="w-5 h-5" />
+            </div>
+            <h3 className="text-sm font-bold text-stone-900 uppercase tracking-widest mb-1 font-display">
+              {t.common.resetProfile}
+            </h3>
+            <p className="text-xs text-stone-450 leading-relaxed mb-6 font-medium">
+              {t.common.resetDesc}
+            </p>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => setShowResetConfirm(false)}
+                className="py-2.5 px-4 rounded-xl border border-stone-250 text-stone-600 hover:bg-stone-50 text-xs font-extrabold tracking-wide transition-all cursor-pointer"
+              >
+                {t.common.cancel}
+              </button>
+              <button
+                type="button"
+                onClick={handleLogoutConfirm}
+                className="py-2.5 px-4 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-extrabold tracking-wide shadow-sm hover:shadow-md transition-all cursor-pointer"
+              >
+                {t.common.yesReset}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
-  );
-}
-
-// Global wrap configuration enforcing API key check first and user authentication Gate
-export default function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [user, setUser] = useState<any>(null);
-
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      if (currentUser) {
-        setUser(currentUser);
-        setIsAuthenticated(true);
-      } else {
-        setUser(null);
-        setIsAuthenticated(false);
-      }
-    });
-
-    return () => unsubscribe();
-  }, []);
-
-  const handleAuthSuccess = () => {
-    setIsAuthenticated(true);
-  };
-
-  const handleSignOut = async () => {
-    await signOut(auth);
-  };
-
-  if (!hasValidKey) {
-    return (
-      <MapContainer
-        center={{ lat: 47.6062, lng: -122.3321 }}
-        zoom={12}
-        pins={[]}
-        selectedPin={null}
-        onMapClick={() => {}}
-        onPinSelect={() => {}}
-        onAutocompleteSelect={() => {}}
-        onPinAdded={() => {}}
-      />
-    );
-  }
-
-  if (!isAuthenticated) {
-    return <AuthGate onAuthSuccess={handleAuthSuccess} />;
-  }
-
-  return (
-    <LocalizationProvider>
-      <APIProvider apiKey={API_KEY} version="weekly">
-        <GeoConciergeApp user={user} onSignOut={handleSignOut} />
-      </APIProvider>
-    </LocalizationProvider>
   );
 }

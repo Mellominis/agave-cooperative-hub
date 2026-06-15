@@ -1,42 +1,71 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Global Safety Net: secure deny-all default
+
+    // ── Global default: deny everything not explicitly allowed ──────────────
     match /{document=**} {
       allow read, write: if false;
     }
 
-    // Global utility helpers
-    function isSignedIn() {
-      return request.auth != null;
+    // ── Helpers ─────────────────────────────────────────────────────────────
+
+    // Document ID must be a valid Firebase Auth UID (28 alphanumeric chars)
+    function isAuthUid(id) {
+      return id is string && id.size() >= 20 && id.size() <= 128;
     }
 
-    function isOwner(userId) {
-      return isSignedIn() && request.auth.uid == userId;
+    function incoming() {
+      return request.resource.data;
     }
 
-    function isValidId(id) {
-      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    // Validates the full shape that SignupForm.tsx writes
+    function isValidSignup(data) {
+      return data.keys().hasAll([
+          'uid', 'fullName', 'email', 'role', 'enterpriseName',
+          'source', 'createdAt', 'registeredAt',
+          'status', 'approvedAt', 'country', 'sector'
+        ])
+        // uid must match the authenticated user making the request
+        && data.uid == request.auth.uid
+        // String length guards
+        && data.fullName  is string && data.fullName.size()  > 0  && data.fullName.size()  <= 200
+        && data.email     is string && data.email.size()     > 0  && data.email.size()     <= 200
+        && data.role      is string && data.role      in ['grower', 'processor', 'agronomy_advocate', 'trade_buying_agent']
+        && data.enterpriseName is string && data.enterpriseName.size() <= 200
+        && data.source    is string && data.source.size()    <= 200
+        && data.createdAt is string && data.createdAt.size() <= 50
+        && data.registeredAt is string && data.registeredAt.size() <= 50
+        // Approval workflow fields
+        && data.status    in ['pending', 'approved']
+        && data.country   is string
+        && data.sector    is string;
     }
 
-    // User Profile matching
-    match /users/{userId} {
-      allow read, write: if isOwner(userId);
-    }
+    // ── /apps/{country}/signups/{uid} ────────────────────────────────────────
+    // Matches the exact path used by SignupForm: apps/zimbabwe/signups/{uid}
+    match /apps/{country}/signups/{uid} {
 
-    // User Meal items
-    match /users/{userId}/meals/{mealId} {
-      allow read, write: if isOwner(userId) && isValidId(mealId);
-    }
+      // CREATE — only the authenticated user can create their own document
+      // and the payload must pass schema validation
+      allow create: if request.auth != null
+                    && request.auth.uid == uid
+                    && isAuthUid(uid)
+                    && isValidSignup(incoming());
 
-    // User Health check-ins
-    match /users/{userId}/checkins/{checkinId} {
-      allow read, write: if isOwner(userId) && isValidId(checkinId);
-    }
+      // READ — a user can only read their own signup doc
+      // (used by SignInForm to restore the session)
+      allow read: if request.auth != null
+                  && request.auth.uid == uid;
 
-    // User streak configuration
-    match /users/{userId}/meta/streak {
-      allow read, write: if isOwner(userId);
+      // UPDATE — allow the same user to update (merge: true re-submission)
+      // Only non-sensitive fields can change; status & approvedAt are admin-only
+      allow update: if request.auth != null
+                    && request.auth.uid == uid
+                    && incoming().status == resource.data.status
+                    && incoming().approvedAt == resource.data.approvedAt;
+
+      // DELETE — never allowed from the client
+      allow delete: if false;
     }
   }
 }

@@ -1,149 +1,45 @@
 {
   "entities": {
-    "Meal": {
-      "title": "Nutrition Meal Entry",
-      "description": "Daily food logger entry tracking consumed items and macro profiles.",
+    "Signup": {
+      "title": "Signup",
+      "description": "User registration for the Agave Cooperative Hub.",
       "type": "object",
       "properties": {
-        "foodName": {
+        "fullName": {
           "type": "string",
-          "description": "The description/name of the food item."
-        },
-        "emoji": {
-          "type": "string",
-          "description": "Representative emoji indicator."
-        },
-        "quantity": {
-          "type": "string",
-          "description": "Amount consumed in weight or units."
-        },
-        "calories": {
-          "type": "number",
-          "description": "Calorie count."
-        },
-        "protein": {
-          "type": "number",
-          "description": "Protein count in grams."
-        },
-        "carbs": {
-          "type": "number",
-          "description": "Carbohydrates in grams."
-        },
-        "fat": {
-          "type": "number",
-          "description": "Fat in grams."
-        },
-        "timestamp": {
-          "type": "string",
-          "format": "date-time",
-          "description": "Creation timestamp."
-        },
-        "userId": {
-          "type": "string",
-          "description": "The reference UID of the authenticated user."
-        },
-        "date": {
-          "type": "string",
-          "description": "The human readable calendar string date context (e.g. Wed May 28 2026)."
-        }
-      },
-      "required": ["foodName", "calories", "userId", "date"]
-    },
-    "Checkin": {
-      "title": "Wellness Check-in Note",
-      "description": "User shared daily mood scale, energy evaluation, and supportive mental wellness journal details.",
-      "type": "object",
-      "properties": {
-        "mood": {
-          "type": "integer",
-          "description": "Subjective scale score from 1 to 10."
-        },
-        "energy": {
-          "type": "integer",
-          "description": "Subjective scale score from 1 to 10."
-        },
-        "note": {
-          "type": "string",
-          "description": "Daily physical or mental training thoughts."
-        },
-        "timestamp": {
-          "type": "string",
-          "format": "date-time",
-          "description": "Creation timestamp."
-        },
-        "userId": {
-          "type": "string",
-          "description": "The reference UID of the authenticated user."
-        },
-        "date": {
-          "type": "string",
-          "description": "The human readable calendar string date context."
-        }
-      },
-      "required": ["mood", "energy", "userId", "date"]
-    },
-    "Streak": {
-      "title": "User Active Training Streak",
-      "description": "Metadata document tracking current usage streak and longest consecutive training days.",
-      "type": "object",
-      "properties": {
-        "current": {
-          "type": "integer",
-          "description": "Active streak days count."
-        },
-        "longest": {
-          "type": "integer",
-          "description": "Record streak count."
-        },
-        "lastActive": {
-          "type": "string",
-          "description": "Last active calendar string date context to verify continuity."
-        }
-      },
-      "required": ["current", "longest", "lastActive"]
-    },
-    "UserProfile": {
-      "title": "User Profile Document",
-      "description": "User account settings, wellness goals, and historical activity settings.",
-      "type": "object",
-      "properties": {
-        "name": {
-          "type": "string",
-          "description": "The full name of the registered user."
+          "description": "Full name of the registrant."
         },
         "email": {
           "type": "string",
-          "description": "The registered email address."
+          "format": "email",
+          "description": "Email address of the registrant."
         },
-        "goal": {
+        "role": {
           "type": "string",
-          "description": "The primary user goal: lose_weight, gain_muscle, or maintain."
+          "enum": ["grower", "processor", "agronomy_advocate", "trade_buying_agent"],
+          "description": "Selected cooperative role/interest."
         },
-        "joinedAt": {
+        "enterpriseName": {
+          "type": "string",
+          "description": "District, province, or corporation name."
+        },
+        "source": {
+          "type": "string",
+          "description": "The component or section where they signed up."
+        },
+        "createdAt": {
           "type": "string",
           "format": "date-time",
-          "description": "Registration and profile creation date."
+          "description": "Timestamp of document creation."
         }
       },
-      "required": ["name", "email", "goal", "joinedAt"]
+      "required": ["fullName", "email", "role", "enterpriseName", "source", "createdAt"]
     }
   },
   "firestore": {
-    "/users/{userId}": {
-      "schema": "UserProfile",
-      "description": "User profile document linking auth register variables."
-    },
-    "/users/{userId}/meals/{mealId}": {
-      "schema": "Meal",
-      "description": "Sub-collection of user logged meal entries."
-    },
-    "/users/{userId}/checkins/{checkinId}": {
-      "schema": "Checkin",
-      "description": "Sub-collection of user physical check-in parameters."
-    },
-    "/users/{userId}/meta/streak": {
-      "schema": "Streak",
-      "description": "Streak parameters document tracking consecutive usage."
+    "/signups/{signupId}": {
+      "schema": "Signup",
+      "description": "Individual cooperative registrants."
     }
   }
 }
